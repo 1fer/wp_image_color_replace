@@ -288,7 +288,7 @@ class Icr_page {
 
     /**
      * -------------------------------------------------------------------------
-     * Notification on Berni Settings page
+     * Notification on settings page
      * -------------------------------------------------------------------------
      * @description Event on save fields
      * @method icr_notificate
