@@ -74,7 +74,7 @@ class Command{
 
         $command = $this->build_command();
 
-        echo shell_exec($command);
+        shell_exec($command);
 
     }
 

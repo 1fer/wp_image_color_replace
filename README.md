@@ -1,5 +1,8 @@
-# Replace color in image
+# ICR
 
+Change color of image with keeping alpha channel and shadows in php.
 Wordpress plugin based on PHP Imagick library.
 
-![alt text](http://i.imgur.com/CJXLDEj.png)
+###Result of work:
+
+![ICR](http://i.imgur.com/CJXLDEj.png)
