@@ -1,5 +1,4 @@
 jQuery(function($){
-
 	    
 	$('#input_color').each( function( i, elem ) {
 
@@ -109,3 +108,26 @@ function rgbToHex(r, g, b) {
 		
 	});
 });
+
+
+'use strick';
+
+var App = function($){
+
+	let offerAjax = {
+			init : function($){ 
+
+			} 
+	}
+
+	return {
+		init : function($){
+			offerAjax.init($);
+		}
+	}
+
+}
+
+jQuery(document).ready(function($){
+	App.init($);
+})

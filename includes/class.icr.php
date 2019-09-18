@@ -69,7 +69,7 @@ class Icr_page {
     public function create_image(){
 
         $command = new Command($this->options);
-        
+
         $command->fire();
 
         echo ICR_URL.'includes/'.$this->options['output_image'].'.jpg';
@@ -94,6 +94,10 @@ class Icr_page {
             wp_enqueue_media();
         }
      
+        wp_enqueue_script(
+            'huebee', ICR_JS . 'huebee.min.js'
+        );
+
         wp_enqueue_script(
             'functions', ICR_JS . 'functions.js', 
             array('jquery'),
