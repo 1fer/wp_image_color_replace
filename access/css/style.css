@@ -1,0 +1,158 @@
+#icr-settings .form-table tr{
+    width: calc(33% - 22.5px);
+    display: flex;
+    flex-direction: column;
+    margin: 0px 7.5px;
+    box-shadow: 1px 3px 5px rgba(0,0,0,.05);
+    background-color: #fff;
+    margin-bottom: 15px;
+    border-radius: 5px;
+}
+
+
+#icr-settings .form-table tbody{
+    display: flex;
+    max-width: 100%;
+    flex-wrap: wrap;
+    align-items: baseline;
+}
+
+#icr-settings {
+    margin-left: 10px;
+}
+
+#icr-settings .form-table tbody{
+    margin-left: -10px;
+}
+#icr-settings .form-table th{
+    text-transform: uppercase;
+    margin-left: 0;
+    padding-bottom: 5px;
+    padding-top: 10px;
+    border-bottom: 1px solid #e2e2e2;
+    color: #23282d;
+    display: block;
+    padding-left: 15px;
+    width: calc(100% - 25px);
+    background-color: #f3f3f3;
+}
+#icr-settings .form-table p{
+    font-style: italic;
+    color: #797979;
+    margin-top: 10px;
+}
+
+#icr-settings .form-table input {
+    padding: 8px 13px;
+    border-radius: 9px;
+    border-color: #dedede;
+    width: 100%;
+}
+
+#icr-settings .form-table img{
+    max-width: 100% !important;
+    border-radius: 3px;
+    margin: 0 auto;
+}
+
+#create-images{
+    margin-left: 15px;
+}
+#icr-settings .form-table tr:first-child{
+    margin-right: 50%;
+    width: calc(50% - 27.5px);
+    position: relative;
+}
+#icr-settings .form-table tr.xk{
+    width: calc(50% - 27.5px);
+}
+.remove_image_button{
+    position: absolute;
+    right: 5px;
+    top: 5px;
+
+}
+
+/*! Huebee v1.0.1
+http://huebee.buzz
+---------------------------------------------- */
+
+.huebee {
+    position: absolute;
+    z-index: 1;
+    transform: translateY(0px);
+    transition: opacity 0.15s, transform 0.15s;
+  }
+  
+  .huebee.is-hidden {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  
+  .huebee.is-static-open {
+    position: relative;
+    z-index: auto;
+  }
+  
+  .huebee__container {
+    position: absolute;
+    left: 0;
+    top: 5px;
+    padding: 10px;
+    background: #EEE;
+    border-radius: 5px;
+    box-shadow: 0 5px 10px hsla(0, 0%, 0%, 0.3);
+  }
+  
+  .huebee.is-static-open .huebee__container {
+    position: relative;
+    display: inline-block;
+    left: auto;
+    top: auto;
+    box-shadow: none;
+  }
+  
+  .huebee__canvas {
+    display: block;
+    cursor: pointer;
+  }
+  
+  .huebee__cursor {
+    width: 15px;
+    height: 15px;
+    position: absolute;
+    left: 0px;
+    top: 0px;
+    box-sizing: content-box;
+    border: 3px solid white;
+    border-radius: 5px;
+    pointer-events: none;
+  }
+  
+  .huebee__cursor.is-hidden { opacity: 0; }
+  
+  .huebee__close-button {
+    display: block;
+    position: absolute;
+    width: 24px;
+    height: 24px;
+    top: -9px;
+    right: -9px;
+    border-radius: 12px;
+    background: #222;
+  }
+  
+  .huebee__close-button__x {
+    stroke: white;
+    stroke-width: 3;
+    stroke-linecap: round;
+  }
+  
+  .huebee__close-button:hover {
+    background: white;
+    cursor: pointer;
+  }
+  
+  .huebee__close-button:hover .huebee__close-button__x {
+    stroke: #222;
+  }

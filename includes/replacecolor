@@ -1,0 +1,225 @@
+#!/bin/bash
+
+icolor="blue"			
+ocolor="red"			
+fuzzval=40				
+gain=100				
+thresh=0				
+brightness=0			
+saturation=0			
+sthresh=10				
+
+tmpdir="."		
+
+PROGNAME=`type $0 | awk '{print $3}'`  
+PROGDIR=`dirname $PROGNAME`            
+PROGNAME=`basename $PROGNAME`         
+usage1() 
+	{
+	echo >&2 ""
+	echo >&2 "$PROGNAME:" "$@"
+	sed >&2 -e '1,/^####/d;  /^###/g;  /^#/!q;  s/^#//;  s/^ //;  4,$p' "$PROGDIR/$PROGNAME"
+	}
+usage2() 
+	{
+	echo >&2 ""
+	echo >&2 "$PROGNAME:" "$@"
+	sed >&2 -e '1,/^####/d;  /^######/g;  /^#/!q;  s/^#*//;  s/^ //;  4,$p' "$PROGDIR/$PROGNAME"
+	}
+
+
+errMsg()
+	{
+	echo ""
+	echo $1
+	echo ""
+	usage1
+	exit 1
+	}
+
+
+checkMinus()
+	{
+	test=`echo "$1" | grep -c '^-.*$'` 
+    [ $test -eq 1 ] && errMsg "$errorMsg"
+	}
+
+if [ $# -eq 0 ]
+	then
+   echo ""
+   usage2
+   exit 0
+elif [ $# -gt 18 ]
+	then
+	errMsg "--- TOO MANY ARGUMENTS WERE PROVIDED ---"
+else
+	while [ $# -gt 0 ]
+		do
+			case "$1" in
+		     -help)    echo ""
+					   usage2
+					   exit 0
+					   ;;
+				-i)    shift
+					   errorMsg="--- INVALID ICOLOR SPECIFICATION ---"
+					   checkMinus "$1"
+					   icolor="$1"
+					   ;;
+				-o)    shift
+					   errorMsg="--- INVALID OCOLOR SPECIFICATION ---"
+					   checkMinus "$1"
+					   ocolor="$1"
+					   ;;
+				-f)    shift
+					   errorMsg="--- INVALID FUZZVAL SPECIFICATION ---"
+					   checkMinus "$1"
+					   fuzzval=`expr "$1" : '\([.0-9]*\)'`
+					   [ "$fuzzval" = "" ] && errMsg "--- FUZZVAL=$fuzzval MUST BE A NON-NEGATIVE FLOAT ---"
+		   			   testA=`echo "$fuzzval > 180" | bc`
+					   [ $testA -eq 1 ] && errMsg "--- FUZZVAL=$fuzzval MUST BE A FLOAT BETWEEN 0 AND 180 ---"
+					   ;;
+				-g)    shift
+					   errorMsg="--- INVALID GAIN SPECIFICATION ---"
+					   checkMinus "$1"
+					   gain=`expr "$1" : '\([0-9]*\)'`
+					   [ "$gain" = "" ] && errMsg "--- GAIN=$gain MUST BE A NON-NEGATIVE INTEGER ---"
+					   ;;
+				-t)    shift
+					   errorMsg="--- INVALID THRESH SPECIFICATION ---"
+					   checkMinus "$1"
+					   thresh=`expr "$1" : '\([.0-9]*\)'`
+					   [ "$thresh" = "" ] && errMsg "--- THRESH=$thresh MUST BE A NON-NEGATIVE FLOAT ---"
+					   ;;
+				-b)    shift
+					   brightness=`expr "$1" : '\([-]*[0-9]*\)'`
+					   [ "$brightness" = "" ] && errMsg "--- BRIGHTNESS=$brightness MUST BE AN INTEGER ---"
+		   			   testA=`echo "$brightness < -100" | bc`
+					   [ $testA -eq 1 ] && errMsg "--- BRIGHTNESS=$brightness MUST BE AN INTEGER LARGER THAN -100 ---"
+					   ;;
+				-s)    shift  
+					   saturation=`expr "$1" : '\([-]*[0-9]*\)'`
+					   [ "$saturation" = "" ] && errMsg "--- SATURATION=$saturation MUST BE AN INTEGER ---"
+		   			   testA=`echo "$saturation < -100" | bc`
+		   			   testB=`echo "$saturation > 100" | bc`
+					   [ $testA -eq 1 -o $testB -eq 1 ] && errMsg "--- SATURATION=$saturation MUST BE AN INTEGER -100 AND 100 ---"
+					   ;;
+				 -)    break
+					   ;;
+				-*)    errMsg "--- UNKNOWN OPTION ---"
+					   ;;
+		     	 *)    break
+					   ;;
+			esac
+			shift
+	done
+	infile="$1"
+	outfile="$2"
+fi
+
+[ "$infile" = "" ] && errMsg "--- NO INPUT FILE SPECIFIED ---"
+
+[ "$outfile" = "" ] && errMsg "--- NO OUTPUT FILE SPECIFIED ---"
+
+dir="$tmpdir/COLORSWAP.$$"
+
+mkdir "$dir" || errMsg "--- FAILED TO CREATE TEMPORARY FILE DIRECTORY ---"
+trap "rm -rf $dir; exit" 0
+trap "rm -rf $dir; exit 1" 1 2 3 15
+
+convert -quiet "$infile" +repage -fuzz $thresh% -fill white -opaque white $dir/tmpI.mpc ||
+echo  "--- FILE $infile DOES NOT EXIST OR IS NOT AN ORDINARY FILE, NOT READABLE OR HAS ZERO SIZE  ---"
+	
+im_version=`convert -list configure | \
+	sed '/^LIB_VERSION_NUMBER */!d; s//,/;  s/,/,0/g;  s/,0*\([0-9][0-9]\)/\1/g' | head -n 1`
+
+is_opaque=`convert $dir/tmpI.mpc -format "%[opaque]" info: | tr "[:upper:]" "[:lower:]"`
+if [ "$is_opaque" = "false" ]; then
+	convert $dir/tmpI.mpc -alpha extract $dir/tmpA.mpc
+	procA="$dir/tmpA.mpc -alpha off -compose copy_opacity -composite"
+else
+	procA=""
+fi
+
+ihsl=`convert xc:"$icolor" -colorspace hsl txt: |\
+	tail -n +2 | sed 's/^[ ]*//' | sed 's/[ ][ ]*/ /g' |\
+	cut -d\  -f4 | sed -n 's/^.*[(]\(.*\)[)]$/\1/p'`
+ihue=`echo "$ihsl" | cut -d, -f1`
+isat=`echo "$ihsl" | cut -d, -f2`
+ibri=`echo "$ihsl" | cut -d, -f3`
+
+test=`echo "$ihue" | grep '%'`
+if [ "$test" != "" ]; then
+	ihue=`echo "$ihue" | sed 's/%//g'`
+	ihue=`echo "scale=6; 360*$ihue/100" | bc`
+fi
+test=`echo "$isat" | grep '%'`
+if [ "$test" != "" ]; then
+	isat=`echo "$isat" | sed 's/%//g'`
+else
+	isat=`echo "scale=6; 100*$isat/255" | bc`
+fi
+test=`echo "$ibri" | grep '%'`
+if [ "$test" != "" ]; then
+	ibri=`echo "$ibri" | sed 's/%//g'`
+else
+	ibri=`echo "scale=6; 100*$ibri/255" | bc`
+fi
+
+ohsl=`convert xc:"$ocolor" -colorspace hsl txt: |\
+	tail -n +2 | sed 's/^[ ]*//' | sed 's/[ ][ ]*/ /g' |\
+	cut -d\  -f4 | sed -n 's/^.*[(]\(.*\)[)]$/\1/p'`
+ohue=`echo "$ohsl" | cut -d, -f1`
+osat=`echo "$ohsl" | cut -d, -f2`
+obri=`echo "$ohsl" | cut -d, -f3`
+test=`echo "$ohue" | grep '%'`
+if [ "$test" != "" ]; then
+	ohue=`echo "$ohue" | sed 's/%//g'`
+else
+	ohue=`echo "scale=6; 100*$ohue/360" | bc`
+fi
+test=`echo "$osat" | grep '%'`
+if [ "$test" != "" ]; then
+	osat=`echo "$osat" | sed 's/%//g'`
+else
+	osat=`echo "scale=6; 100*$osat/255" | bc`
+fi
+test=`echo "$obri" | grep '%'`
+if [ "$test" != "" ]; then
+	obri=`echo "$obri" | sed 's/%//g'`
+else
+	obri=`echo "scale=6; 100*$obri/255" | bc`
+fi
+
+bri=`echo "scale=6; (50+$obri+$brightness)/100" | bc`
+sat=`echo "scale=6; ($osat+$saturation)/100" | bc`
+[ `echo "$bri < 0.0" | bc` -eq 1 ] && bri=0
+[ `echo "$sat < 0.0" | bc` -eq 1 ] && sat=0
+
+full_range=`convert xc: -format "%[fx:2*round($fuzzval*100)-1]" info:`
+
+rollval=`convert xc: -format "%[fx:round($ihue*100)]" info:`
+
+convert -size 35999x1 xc:black \
+	\( -size ${full_range}x1 xc:white \) \
+	-gravity center -compose over -composite \
+	-roll -17998+0 -roll +${rollval}+0 \
+	$dir/hlut.png
+
+gain=$((100+gain))
+
+
+convert \( $dir/tmpI.mpc -depth 8 \) \
+	\( -clone 0 -alpha off -colorspace hsl -separate +channel \) \
+	\( -clone 1 -fill "gray($ohue%)" -colorize 100 \) \
+	\( -clone 2 -evaluate multiply $sat \) \
+	\( -clone 3 -evaluate multiply $bri \) \
+	\( -clone 4,5,6 -set colorspace hsl -combine -colorspace sRGB \) \
+	\( -clone 1 $dir/hlut.png -interpolate bilinear -clut \) \
+	\( -clone 2 -black-threshold ${thresh}% +level 0x$gain% \) \
+	\( -clone 8 -clone 9 -compose over -compose multiply -composite \) \
+	-delete 1-6,8,9 \
+	\( -clone 0 -clone 1 -clone 2 -compose over -composite \) \
+	-delete 0-2 $procA \
+	"$outfile"
+
+exit 0
