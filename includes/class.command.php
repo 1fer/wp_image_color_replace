@@ -30,6 +30,21 @@
 class Command{
 
     /**
+     * @var Array main list of commands
+     */
+    private $config;
+
+    /**
+     * @var String dir of incomming file
+     */
+    private $image_url;
+
+    /**
+     * @var String dir of uploaded file
+     */
+    private $output_name;
+
+    /**
      * -------------------------------------------------------------------------
      * Lets Start Up
      * -------------------------------------------------------------------------
@@ -43,7 +58,7 @@ class Command{
      */
     public function __construct($config) {
 
-        $this->config = array(
+        $this->config = [
             '-i' => $config['input_color'],
             '-o' => $config['output_color'],
             '-f' => $config['fuzzval'],
@@ -51,7 +66,7 @@ class Command{
             '-t' => $config['thresh'],
             '-b' => $config['brightness'],
             '-s' => $config['saturation']
-        );
+        ];
 
         $this->image_url    = get_attached_file($config['image_box']);
         $this->output_name  = $config['output_image'];
@@ -72,9 +87,9 @@ class Command{
      */
     public function fire(){
 
-        $command = $this->build_command();
+        $command = self::build_command();
 
-        shell_exec($command);
+        @shell_exec($command);
 
     }
 
@@ -90,7 +105,7 @@ class Command{
      * @author <panevnyk.roman@gmail.com>
      * @since 1.0
      */
-    public function build_command() {
+    private function build_command() {
         
         $command = ICR_INC.'replacecolor ';
 
